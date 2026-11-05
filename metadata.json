@@ -1,0 +1,6 @@
+{
+  "name": "LEOVANDYZ CODEBASE",
+  "description": "A modern developer workspace to discover, customize, preview, and share UI components, templates, code snippets, and curated source code archives.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

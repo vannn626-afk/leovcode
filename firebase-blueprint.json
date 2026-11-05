@@ -1,0 +1,327 @@
+{
+  "entities": {
+    "PublicProfile": {
+      "title": "PublicProfile",
+      "description": "Public profile information for a platform user without PII.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "role": { "type": "string", "enum": ["owner", "admin", "user"] },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "role", "status", "createdAt", "updatedAt"]
+    },
+    "PrivateProfileInfo": {
+      "title": "PrivateProfileInfo",
+      "description": "Isolated PII document for user email address.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "minLength": 3, "maxLength": 254 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted role lookup record for platform administrators and owners.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "role": { "type": "string", "enum": ["owner", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "role", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Content category across components, templates, snippets, and scrapes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "section": { "type": "string", "enum": ["components", "templates", "snippets", "scrapes"] },
+        "iconName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "order": { "type": "number" },
+        "isVisible": { "type": "boolean" },
+        "isFeatured": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "description", "section", "iconName", "order", "isVisible", "isFeatured", "createdAt", "updatedAt"]
+    },
+    "ComponentItem": {
+      "title": "ComponentItem",
+      "description": "Reusable UI component with live preview source code and visual customization defaults.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "category": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "subcategory": { "type": "string", "minLength": 0, "maxLength": 80 },
+        "technology": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "tags": { "type": "array", "description": "Up to 10 string tags" },
+        "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+        "isFeatured": { "type": "boolean" },
+        "isPopular": { "type": "boolean" },
+        "version": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "viewsCount": { "type": "number" },
+        "copiesCount": { "type": "number" },
+        "downloadsCount": { "type": "number" },
+        "htmlCode": { "type": "string", "maxLength": 50000 },
+        "cssCode": { "type": "string", "maxLength": 50000 },
+        "jsCode": { "type": "string", "maxLength": 50000 },
+        "reactCode": { "type": "string", "maxLength": 50000 },
+        "tailwindCode": { "type": "string", "maxLength": 50000 },
+        "tsCode": { "type": "string", "maxLength": 50000 },
+        "authorId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "description", "category", "subcategory", "technology", "tags", "status", "isFeatured", "isPopular", "version", "viewsCount", "copiesCount", "downloadsCount", "htmlCode", "cssCode", "jsCode", "reactCode", "tailwindCode", "tsCode", "authorId", "createdAt", "updatedAt"]
+    },
+    "TemplateItem": {
+      "title": "TemplateItem",
+      "description": "Full landing page or multi-section UI template.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "category": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "technology": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "tags": { "type": "array" },
+        "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+        "isFeatured": { "type": "boolean" },
+        "htmlCode": { "type": "string", "maxLength": 80000 },
+        "reactCode": { "type": "string", "maxLength": 80000 },
+        "viewsCount": { "type": "number" },
+        "copiesCount": { "type": "number" },
+        "downloadsCount": { "type": "number" },
+        "authorId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "description", "category", "technology", "tags", "status", "isFeatured", "htmlCode", "reactCode", "viewsCount", "copiesCount", "downloadsCount", "authorId", "createdAt", "updatedAt"]
+    },
+    "SnippetItem": {
+      "title": "SnippetItem",
+      "description": "Reusable developer code snippet.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 600 },
+        "category": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "language": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "tags": { "type": "array" },
+        "code": { "type": "string", "minLength": 1, "maxLength": 50000 },
+        "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+        "isPublic": { "type": "boolean" },
+        "authorId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "copiesCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "description", "category", "language", "tags", "code", "status", "isPublic", "authorId", "authorName", "copiesCount", "createdAt", "updatedAt"]
+    },
+    "ScrapedProject": {
+      "title": "ScrapedProject",
+      "description": "Curated source code archive published by the platform owner with license and attribution.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 1200 },
+        "category": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "technologies": { "type": "array" },
+        "tags": { "type": "array" },
+        "sourceUrl": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "sourceAuthor": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "license": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "attributionNotes": { "type": "string", "minLength": 1, "maxLength": 600 },
+        "entryFile": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+        "isFeatured": { "type": "boolean" },
+        "isPopular": { "type": "boolean" },
+        "viewsCount": { "type": "number" },
+        "copiesCount": { "type": "number" },
+        "downloadsCount": { "type": "number" },
+        "authorId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "description", "category", "technologies", "tags", "sourceUrl", "sourceAuthor", "license", "attributionNotes", "entryFile", "status", "isFeatured", "isPopular", "viewsCount", "copiesCount", "downloadsCount", "authorId", "createdAt", "updatedAt"]
+    },
+    "ScrapedProjectFile": {
+      "title": "ScrapedProjectFile",
+      "description": "Individual file inside a published scrape project archive.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "projectId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "filePath": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "language": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "mimeType": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "fileSize": { "type": "number" },
+        "isEntryFile": { "type": "boolean" },
+        "content": { "type": "string", "maxLength": 100000 },
+        "authorId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "projectId", "filePath", "language", "mimeType", "fileSize", "isEntryFile", "content", "authorId", "createdAt", "updatedAt"]
+    },
+    "AssetItem": {
+      "title": "AssetItem",
+      "description": "Managed SVG or image asset metadata in Owner Studio.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "mimeType": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "extension": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "sizeBytes": { "type": "number" },
+        "url": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "category": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "uploadedBy": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "mimeType", "extension", "sizeBytes", "url", "category", "uploadedBy", "createdAt"]
+    },
+    "FavoriteItem": {
+      "title": "FavoriteItem",
+      "description": "User favorite reference to a component, template, snippet, or scrape.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "targetId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "targetType": { "type": "string", "enum": ["component", "template", "snippet", "scrape"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "category": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "targetId", "targetType", "title", "slug", "category", "createdAt"]
+    },
+    "CollectionFolder": {
+      "title": "CollectionFolder",
+      "description": "User-created collection of saved resources.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "description": { "type": "string", "minLength": 0, "maxLength": 400 },
+        "itemIds": { "type": "array", "description": "Up to 50 resource IDs" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "name", "description", "itemIds", "createdAt", "updatedAt"]
+    },
+    "PlatformSettings": {
+      "title": "PlatformSettings",
+      "description": "Global platform configuration controlled by the owner.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "siteName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "siteDescription": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "accentColor": { "type": "string", "minLength": 4, "maxLength": 20 },
+        "defaultTheme": { "type": "string", "enum": ["dark", "light"] },
+        "maintenanceMode": { "type": "boolean" },
+        "allowPublicPlayground": { "type": "boolean" },
+        "maxUploadSizeMb": { "type": "number" },
+        "updatedBy": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "siteName", "siteDescription", "accentColor", "defaultTheme", "maintenanceMode", "allowPublicPlayground", "maxUploadSizeMb", "updatedBy", "updatedAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable administrative audit trail record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorUid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "action": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "resourceType": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "resourceId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "actorUid", "actorName", "action", "resourceType", "resourceId", "summary", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/PublicProfile" },
+      "description": "Public user profile records without PII."
+    },
+    "/profiles/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/PrivateProfileInfo" },
+      "description": "Isolated user PII subcollection restricted to owner or admin."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Admin and owner lookup collection."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Content taxonomy categories."
+    },
+    "/components/{componentId}": {
+      "schema": { "$ref": "#/entities/ComponentItem" },
+      "description": "UI Component Library items."
+    },
+    "/templates/{templateId}": {
+      "schema": { "$ref": "#/entities/TemplateItem" },
+      "description": "Landing page and multi-section templates."
+    },
+    "/snippets/{snippetId}": {
+      "schema": { "$ref": "#/entities/SnippetItem" },
+      "description": "Reusable code snippets."
+    },
+    "/scrapes/{scrapeId}": {
+      "schema": { "$ref": "#/entities/ScrapedProject" },
+      "description": "Published scrape source code archives."
+    },
+    "/scrapes/{scrapeId}/files/{fileId}": {
+      "schema": { "$ref": "#/entities/ScrapedProjectFile" },
+      "description": "Individual files belonging to a scrape archive."
+    },
+    "/assets/{assetId}": {
+      "schema": { "$ref": "#/entities/AssetItem" },
+      "description": "Managed SVG and image assets."
+    },
+    "/favorites/{favoriteId}": {
+      "schema": { "$ref": "#/entities/FavoriteItem" },
+      "description": "User favorite items."
+    },
+    "/collections/{collectionId}": {
+      "schema": { "$ref": "#/entities/CollectionFolder" },
+      "description": "User resource collections."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/PlatformSettings" },
+      "description": "Global platform configuration."
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Administrative audit trail."
+    }
+  }
+}
