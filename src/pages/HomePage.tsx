@@ -15,6 +15,8 @@ import { downloadComponentZip } from '../utils/exportZip';
 
 export function HomePage() {
   const {
+    user,
+    role,
     components,
     templates,
     snippets,
@@ -28,6 +30,7 @@ export function HomePage() {
   } = usePlatform();
 
   const isId = lang === 'id';
+  const canAccessOwnerStudio = Boolean(user) && (role === 'owner' || role === 'admin');
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [heroTab, setHeroTab] = useState<'preview' | 'code'>('preview');
@@ -253,12 +256,12 @@ export function HomePage() {
           </div>
           <div className="p-3 rounded-lg bg-white/80 dark:bg-[#10141D] border border-slate-200 dark:border-white/10">
             <p className="font-semibold text-slate-900 dark:text-[#F5F7FA] mb-1">
-              {isId ? '4. Kelola Konten di Owner Studio' : '4. Manage Content in Owner Studio'}
+              {isId ? '4. Simpan Favorit & Akses Akun' : '4. Save Favorites & Account Sync'}
             </p>
             <p>
               {isId
-                ? 'Buka menu Owner Studio di sidebar kiri untuk menambah komponen, mengunggah ZIP proyek scrape, atau mengganti warna aksen.'
-                : 'Open Owner Studio in the left sidebar to publish components, upload ZIP archives, or customize theme tokens.'}
+                ? 'Simpan favorit langsung di browser tanpa login, atau masuk dengan Google untuk sinkronisasi Cloud & akses Owner Studio.'
+                : 'Bookmark components locally without signing in, or sign in with Google for Cloud sync and Owner Studio access.'}
             </p>
           </div>
         </div>
@@ -639,13 +642,23 @@ export function HomePage() {
             <Wrench className="w-3.5 h-3.5 text-[#8B9CFF]" />
             <span>{isId ? 'Konverter Kode' : 'Code Converter'}</span>
           </Link>
-          <Link
-            to="/owner"
-            className="px-4 py-2.5 rounded-lg bg-[#8B9CFF] text-[#090B10] text-xs font-semibold flex items-center gap-2 whitespace-nowrap"
-          >
-            <TerminalSquare className="w-3.5 h-3.5" />
-            <span>{isId ? 'Buka Owner Studio' : 'Open Owner Studio'}</span>
-          </Link>
+          {canAccessOwnerStudio ? (
+            <Link
+              to="/owner"
+              className="px-4 py-2.5 rounded-lg bg-[#8B9CFF] text-[#090B10] text-xs font-semibold flex items-center gap-2 whitespace-nowrap"
+            >
+              <TerminalSquare className="w-3.5 h-3.5" />
+              <span>{isId ? 'Buka Owner Studio' : 'Open Owner Studio'}</span>
+            </Link>
+          ) : (
+            <Link
+              to="/playground"
+              className="px-4 py-2.5 rounded-lg bg-[#8B9CFF] text-[#090B10] text-xs font-semibold flex items-center gap-2 whitespace-nowrap"
+            >
+              <TerminalSquare className="w-3.5 h-3.5" />
+              <span>{isId ? 'Buka Code Playground' : 'Open Code Playground'}</span>
+            </Link>
+          )}
         </div>
       </section>
     </div>

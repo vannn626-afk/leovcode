@@ -55,10 +55,10 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     dismissToast,
     signInWithGoogle,
     signOut,
-    enableWorkspaceOwnerPreview,
   } = usePlatform();
 
   const isId = lang === 'id';
+  const canAccessOwnerStudio = Boolean(user) && (role === 'owner' || role === 'admin');
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -264,7 +264,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             </div>
           ))}
 
-          {(role === 'owner' || role === 'admin') && (
+          {canAccessOwnerStudio && (
             <div>
               <p className="px-2.5 text-[11px] font-mono text-[#8B9CFF] mb-1.5">OWNER STUDIO</p>
               <div className="space-y-0.5">
@@ -295,9 +295,15 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         <div className="p-3 border-t border-slate-200 dark:border-white/[0.09] bg-slate-50 dark:bg-[#090B10]/60">
           <div className="flex items-center justify-between text-xs mb-2">
             <span className="font-medium truncate max-w-[140px]">
-              {profile?.displayName || (role === 'owner' ? 'Leovandyz (Owner)' : isId ? 'Pengunjung Publik' : 'Public Guest')}
+              {user
+                ? profile?.displayName || user.email
+                : isId
+                ? 'Pengunjung Publik'
+                : 'Public Visitor'}
             </span>
-            <span className="font-mono text-[11px] text-[#8B9CFF] uppercase">{role}</span>
+            <span className="font-mono text-[11px] text-[#8B9CFF] uppercase">
+              {user ? role : isId ? 'publik' : 'public'}
+            </span>
           </div>
           {user ? (
             <button
@@ -309,25 +315,14 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
               <span>{isId ? 'Keluar Akun' : 'Sign Out'}</span>
             </button>
           ) : (
-            <div className="flex gap-1.5">
-              <button
-                type="button"
-                onClick={signInWithGoogle}
-                className="flex-1 py-1.5 px-2.5 rounded-lg bg-[#8B9CFF] text-[#090B10] font-semibold text-xs flex items-center justify-center gap-1.5"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>{isId ? 'Masuk Google' : 'Google Sign In'}</span>
-              </button>
-              {role !== 'owner' && (
-                <button
-                  type="button"
-                  onClick={enableWorkspaceOwnerPreview}
-                  className="py-1.5 px-2 rounded-lg bg-[#141A24] border border-white/10 text-[11px] font-mono text-[#8B9CFF]"
-                >
-                  Owner
-                </button>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={signInWithGoogle}
+              className="w-full py-1.5 px-2.5 rounded-lg bg-[#8B9CFF] text-[#090B10] font-semibold text-xs flex items-center justify-center gap-1.5"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>{isId ? 'Masuk Google' : 'Google Sign In'}</span>
+            </button>
           )}
         </div>
       </aside>
@@ -374,7 +369,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 </div>
               ))}
-              {(role === 'owner' || role === 'admin') && (
+              {canAccessOwnerStudio && (
                 <div>
                   <p className="text-[11px] font-mono text-[#8B9CFF] mb-1.5">OWNER STUDIO</p>
                   <div className="space-y-1">
@@ -447,9 +442,11 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             <Link to="/playground" className="hover:text-slate-900 dark:hover:text-[#F5F7FA] whitespace-nowrap shrink-0">
               Playground
             </Link>
-            <Link to="/owner" className="hover:text-[#8B9CFF] text-[#8B9CFF] whitespace-nowrap shrink-0">
-              Owner Studio
-            </Link>
+            {canAccessOwnerStudio && (
+              <Link to="/owner" className="hover:text-[#8B9CFF] text-[#8B9CFF] whitespace-nowrap shrink-0">
+                Owner Studio
+              </Link>
+            )}
           </nav>
 
           {/* Zone 3: Command Search + Guide Button + Language Toggle + Theme Switch */}
@@ -540,9 +537,11 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
               <Link to="/playground" className="hover:text-slate-900 dark:hover:text-white">
                 Playground
               </Link>
-              <Link to="/owner" className="hover:text-slate-900 dark:hover:text-white">
-                Owner Studio
-              </Link>
+              {canAccessOwnerStudio && (
+                <Link to="/owner" className="hover:text-slate-900 dark:hover:text-white">
+                  Owner Studio
+                </Link>
+              )}
             </div>
           </div>
         </footer>

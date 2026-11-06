@@ -8,6 +8,7 @@ import {
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   setDoc,
   deleteDoc,
@@ -79,7 +80,6 @@ interface PlatformContextValue {
   dismissToast: (id: string) => void;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  enableWorkspaceOwnerPreview: () => void;
   toggleFavorite: (item: { id: string; type: FavoriteItem['targetType']; title: string; slug: string; category: string }) => Promise<void>;
   isFavorited: (targetId: string) => boolean;
   createCollection: (name: string, description: string) => Promise<void>;
@@ -113,7 +113,7 @@ const LS_LANG_KEY = 'lv_codebase_lang_v1';
 export function PlatformProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [role, setRole] = useState<UserRole>('owner');
+  const [role, setRole] = useState<UserRole>('user');
   const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [dataLoading, setDataLoading] = useState<boolean>(false);
 
@@ -234,8 +234,8 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
 
   const appendAuditLog = useCallback(
     async (action: string, resourceType: string, resourceId: string, summary: string) => {
-      const actorUid = user?.uid || profile?.uid || 'owner-bootstrap-1';
-      const actorName = user?.displayName || profile?.displayName || 'Leovandyz (Platform Owner)';
+      const actorUid = user?.uid || profile?.uid || 'anonymous';
+      const actorName = user?.displayName || profile?.displayName || user?.email || 'Authenticated User';
       const logId = `log-${Date.now()}`;
       const newEntry: AuditLogItem = {
         id: logId,
@@ -249,7 +249,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       };
       setAuditLogs((prev) => [newEntry, ...prev]);
 
-      if (user && user.email === BOOTSTRAPPED_OWNER_EMAIL) {
+      if (user && (role === 'owner' || role === 'admin')) {
         try {
           await setDoc(doc(db, 'audit_logs', logId), {
             ...newEntry,
@@ -260,7 +260,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [user, profile]
+    [user, profile, role]
   );
 
   // Sync theme & accent color with DOM
@@ -288,19 +288,37 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
   }, [lang]);
 
   const toggleLang = useCallback(() => {
-    setLang((prev) => {
-      const next = prev === 'id' ? 'en' : 'id';
-      return next;
-    });
+    setLang((prev) => (prev === 'id' ? 'en' : 'id'));
   }, []);
 
-  // Listen to Firebase Auth state
+  // Listen to Firebase Auth state: strictly resolve role from verified user session & Firestore
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       setUser(fbUser);
       if (fbUser) {
-        const isOwnerUser = fbUser.email === BOOTSTRAPPED_OWNER_EMAIL;
-        const resolvedRole: UserRole = isOwnerUser ? 'owner' : 'user';
+        const isBootstrappedOwner =
+          Boolean(fbUser.emailVerified) &&
+          fbUser.email?.toLowerCase() === BOOTSTRAPPED_OWNER_EMAIL.toLowerCase();
+
+        let resolvedRole: UserRole = isBootstrappedOwner ? 'owner' : 'user';
+
+        // Check if user has a stored role in Firestore users/{uid}
+        try {
+          const userDocSnap = await getDoc(doc(db, 'users', fbUser.uid));
+          if (userDocSnap.exists()) {
+            const storedData = userDocSnap.data();
+            if (storedData.status === 'active') {
+              if (isBootstrappedOwner) {
+                resolvedRole = 'owner';
+              } else if (storedData.role === 'admin' || storedData.role === 'owner') {
+                resolvedRole = storedData.role;
+              }
+            }
+          }
+        } catch {
+          // Fallback to bootstrapped check if user doc doesn't exist yet
+        }
+
         setRole(resolvedRole);
         const userProf: UserProfile = {
           uid: fbUser.uid,
@@ -338,16 +356,9 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
           handleFirestoreError(err, OperationType.LIST, 'favorites');
         }
       } else {
-        setProfile({
-          uid: 'owner-bootstrap-1',
-          email: BOOTSTRAPPED_OWNER_EMAIL,
-          displayName: 'Leovandyz (Workspace Owner)',
-          role: 'owner',
-          status: 'active',
-          createdAt: '2026-11-05T04:00:00.000Z',
-          updatedAt: '2026-11-05T04:00:00.000Z',
-        });
-        setRole('owner');
+        // Unauthenticated / Incognito / Signed Out: strictly public guest ('user' role, null profile)
+        setProfile(null);
+        setRole('user');
       }
       setAuthLoading(false);
     });
@@ -366,7 +377,11 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
           const remoteComps: ComponentItem[] = [];
           compSnap.forEach((d) => {
             const data = d.data() as ComponentItem;
-            remoteComps.push({ ...data, createdAt: String(data.createdAt || ''), updatedAt: String(data.updatedAt || '') });
+            remoteComps.push({
+              ...data,
+              createdAt: String(data.createdAt || ''),
+              updatedAt: String(data.updatedAt || ''),
+            });
           });
           setComponents((prev) => {
             const map = new Map(prev.map((c) => [c.id, c]));
@@ -388,10 +403,17 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
-      notify('Signed in with Google successfully.', 'success');
+      const cred = await signInWithPopup(auth, googleProvider);
+      const isOwnerAccount =
+        cred.user.email?.toLowerCase() === BOOTSTRAPPED_OWNER_EMAIL.toLowerCase();
+      notify(
+        isOwnerAccount
+          ? 'Berhasil masuk sebagai Owner (Leovandyz). Menu Owner Studio kini aktif.'
+          : 'Berhasil masuk dengan akun Google.',
+        'success'
+      );
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'Google Sign-In was cancelled.', 'info');
+      notify(err instanceof Error ? err.message : 'Login Google dibatalkan.', 'info');
     }
   }, [notify]);
 
@@ -400,24 +422,10 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       await fbSignOut(auth);
       setRole('user');
       setProfile(null);
-      notify('Signed out of workspace session.', 'info');
+      notify('Berhasil keluar dari sesi akun.', 'info');
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'Sign-out failed.', 'error');
+      notify(err instanceof Error ? err.message : 'Gagal keluar dari akun.', 'error');
     }
-  }, [notify]);
-
-  const enableWorkspaceOwnerPreview = useCallback(() => {
-    setRole('owner');
-    setProfile({
-      uid: 'owner-bootstrap-1',
-      email: BOOTSTRAPPED_OWNER_EMAIL,
-      displayName: 'Leovandyz (Workspace Owner)',
-      role: 'owner',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    notify('Owner Studio role activated.', 'success');
   }, [notify]);
 
   const isFavorited = useCallback(
@@ -565,7 +573,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         item.id,
         `${isNew ? 'Created' : 'Updated'} component "${item.name}" (${item.status}).`
       );
-      if (user && user.email === BOOTSTRAPPED_OWNER_EMAIL) {
+      if (user && (role === 'owner' || role === 'admin')) {
         try {
           await setDoc(doc(db, 'components', item.id), {
             ...item,
@@ -579,7 +587,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       }
       notify(`Saved component "${item.name}".`, 'success');
     },
-    [user, appendAuditLog, notify]
+    [user, role, appendAuditLog, notify]
   );
 
   const deleteComponent = useCallback(
@@ -587,7 +595,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       const target = components.find((c) => c.id === id);
       setComponents((prev) => prev.filter((c) => c.id !== id));
       await appendAuditLog('DELETE_COMPONENT', 'component', id, `Deleted component "${target?.name || id}".`);
-      if (user && user.email === BOOTSTRAPPED_OWNER_EMAIL) {
+      if (user && (role === 'owner' || role === 'admin')) {
         try {
           await deleteDoc(doc(db, 'components', id));
         } catch (err) {
@@ -596,7 +604,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       }
       notify('Deleted component.', 'info');
     },
-    [components, user, appendAuditLog, notify]
+    [components, user, role, appendAuditLog, notify]
   );
 
   const saveTemplate = useCallback(
@@ -611,7 +619,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         item.id,
         `${isNew ? 'Created' : 'Updated'} template "${item.name}" (${item.status}).`
       );
-      if (user && user.email === BOOTSTRAPPED_OWNER_EMAIL) {
+      if (user && (role === 'owner' || role === 'admin')) {
         try {
           await setDoc(doc(db, 'templates', item.id), {
             ...item,
@@ -625,7 +633,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       }
       notify(`Saved template "${item.name}".`, 'success');
     },
-    [user, appendAuditLog, notify]
+    [user, role, appendAuditLog, notify]
   );
 
   const deleteTemplate = useCallback(
@@ -687,7 +695,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         item.id,
         `${isNew ? 'Published' : 'Updated'} scrape archive "${item.name}" with ${item.files?.length || 0} files.`
       );
-      if (user && user.email === BOOTSTRAPPED_OWNER_EMAIL) {
+      if (user && (role === 'owner' || role === 'admin')) {
         try {
           const { files, ...projectMeta } = item;
           await setDoc(doc(db, 'scrapes', item.id), {
@@ -713,7 +721,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       }
       notify(`Saved scrape archive "${item.name}".`, 'success');
     },
-    [user, appendAuditLog, notify]
+    [user, role, appendAuditLog, notify]
   );
 
   const deleteScrape = useCallback(
@@ -813,7 +821,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         'global',
         `Updated platform settings (accent=${next.accentColor}, theme=${next.defaultTheme}).`
       );
-      if (user && user.email === BOOTSTRAPPED_OWNER_EMAIL) {
+      if (user && role === 'owner') {
         try {
           await setDoc(doc(db, 'settings', 'global'), {
             ...next,
@@ -826,7 +834,7 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
       }
       notify('Saved platform settings.', 'success');
     },
-    [user, appendAuditLog, notify]
+    [user, role, appendAuditLog, notify]
   );
 
   const resetPlatformSettings = useCallback(async () => {
@@ -864,7 +872,6 @@ export function PlatformProvider({ children }: { children: React.ReactNode }) {
         dismissToast,
         signInWithGoogle,
         signOut,
-        enableWorkspaceOwnerPreview,
         toggleFavorite,
         isFavorited,
         createCollection,

@@ -514,22 +514,25 @@ export function ProfilePage() {
             </div>
             <div>
               <h2 className="text-base font-bold">
-                {profile?.displayName ||
-                  (lang === 'id' ? 'Sesi Pengunjung Publik' : 'Public Developer Session')}
+                {user
+                  ? profile?.displayName || user.email
+                  : lang === 'id'
+                  ? 'Sesi Pengunjung Publik (Belum Login)'
+                  : 'Public Visitor Session (Not Signed In)'}
               </h2>
               <p className="text-xs font-mono text-slate-500 dark:text-[#9BA6B5]">
-                {user?.email ||
-                  profile?.email ||
-                  (lang === 'id'
-                    ? 'Mode publik aktif (tersimpan di browser lokal)'
-                    : 'Local fallback mode active')}
+                {user
+                  ? user.email
+                  : lang === 'id'
+                  ? 'Mode publik aktif (favorit & koleksi tersimpan di browser lokal)'
+                  : 'Public mode active (favorites & collections stored in local browser)'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono uppercase">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{role}</span>
+            <span>{user ? role : lang === 'id' ? 'publik' : 'public'}</span>
           </div>
         </div>
 

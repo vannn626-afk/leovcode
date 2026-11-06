@@ -37,9 +37,10 @@ import type {
 
 export function OwnerStudioPage() {
   const {
+    user,
     role,
     lang,
-    enableWorkspaceOwnerPreview,
+    signInWithGoogle,
     components,
     templates,
     snippets,
@@ -71,26 +72,50 @@ export function OwnerStudioPage() {
   const location = useLocation();
   const subPath = location.pathname.replace(/^\/owner\/?/, '') || 'dashboard';
 
-  // Gate for non-owner/non-admin users
-  if (role !== 'owner' && role !== 'admin') {
+  // Strict Gate: require authenticated Owner or Admin account
+  if (!user || (role !== 'owner' && role !== 'admin')) {
     return (
-      <div className="max-w-lg mx-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#141A24] p-8 text-center space-y-4">
+      <div className="max-w-lg mx-auto rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#141A24] p-8 text-center space-y-4 my-8">
         <ShieldAlert className="w-8 h-8 text-amber-400 mx-auto" />
-        <h1 className="text-xl font-bold">
-          {isId ? 'Akses Owner Studio Dibatasi' : 'Owner Studio Access Restricted'}
+        <h1 className="text-xl font-bold text-slate-900 dark:text-[#F5F7FA]">
+          {!user
+            ? isId
+              ? 'Akses Owner Studio Memerlukan Login'
+              : 'Owner Studio Requires Authentication'
+            : isId
+            ? 'Akses Ditolak (Bukan Akun Owner / Admin)'
+            : 'Access Denied (Insufficient Role Permissions)'}
         </h1>
-        <p className="text-xs text-slate-500 dark:text-[#9BA6B5]">
-          {isId
-            ? 'Hanya Owner dan Administrator terverifikasi yang dapat mengelola katalog, pengaturan keamanan, dan log audit.'
-            : 'Only verified platform owners and administrators can manage catalog resources, security settings, and audit logs.'}
+        <p className="text-xs text-slate-500 dark:text-[#9BA6B5] leading-relaxed">
+          {!user
+            ? isId
+              ? 'Halaman pengelolaan platform ini dikunci khusus untuk Owner dan Administrator terverifikasi. Silakan masuk dengan akun Google Owner untuk melanjutkan.'
+              : 'This studio is strictly restricted to verified platform owners and administrators. Sign in with your Google Owner account to continue.'
+            : isId
+            ? `Akun ${user.email} terdaftar sebagai pengguna publik biasa (User) dan tidak memiliki izin membuka Owner Studio.`
+            : `The account ${user.email} has standard user permissions and cannot access Owner Studio.`}
         </p>
-        <button
-          type="button"
-          onClick={enableWorkspaceOwnerPreview}
-          className="px-4 py-2 rounded-lg bg-[#8B9CFF] text-[#090B10] text-xs font-semibold"
-        >
-          {isId ? 'Aktifkan Sesi Owner Studio' : 'Activate Owner Studio Session'}
-        </button>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            className="px-4 py-2 rounded-lg bg-[#8B9CFF] text-[#090B10] text-xs font-semibold"
+          >
+            {!user
+              ? isId
+                ? 'Masuk dengan Google (Akun Owner)'
+                : 'Sign In with Google (Owner Account)'
+              : isId
+              ? 'Ganti Akun Google'
+              : 'Switch Google Account'}
+          </button>
+          <Link
+            to="/"
+            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 text-xs font-semibold text-slate-700 dark:text-[#F5F7FA]"
+          >
+            {isId ? 'Kembali ke Beranda' : 'Back to Overview'}
+          </Link>
+        </div>
       </div>
     );
   }
